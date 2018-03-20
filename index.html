@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Combat Tracker</title>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+</head>
+
+<style type="text/css">
+  table {
+  	border: 1px;
+  	border-style: solid;
+  	border-color: black;
+  	margin: 5px;
+  }
+
+  .container {
+  	margin: 10px;
+  	padding: 10px;
+  }
+
+  .results td {
+  	border: 1px;
+  	border-style: solid;
+  	border-color: black;
+  }
+
+  .result_content {
+  	text-align: center;
+  }
+</style>
+
+<body>
+	<div>
+		<h1>Combat Tracker</h1>
+	</div>
+
+	<hr>
+
+	<div class="container">
+    	<div>
+    		<h3>Party<h3>
+    	</div>
+    	<div>
+    		<button id="addPlayer">Add</button>
+    	</div>
+    	<div>
+	    	<table id="players">
+	    		<thead>
+	    			<th>Name</th>
+	    			<th>Armor Class</th>
+	    			<th>Hit Points</th>
+	    			<th>Passive Perception</th>
+	    			<th>Initiative</th>
+	    			<th></th>
+	    		</thead>
+	    		<tbody>
+	    			<tr>
+	    				<td>
+	    					<input type="text" name="unitName">
+	    				</td>
+	    				<td>
+	    					<input type="text" name="armorClass">
+	    				</td>
+	    				<td>
+	    					<input type="text" name="hitPoints">
+	    				</td>
+	    				<td>
+	    					<input type="text" name="passivePerception">
+	    				</td>
+	    				<td>
+	    					<input type="text" name="initiative" class="initiative">
+	    				</td>
+	    				<td></td>
+	    			</tr>
+	    		</tbody>
+	    	</table>
+    	</div>
+    </div>
+
+    <div class="container">
+    	<div>
+    		<h3>NPCs</h3>
+    	</div>
+    	<div>
+    		<button id="addNPC">Add</button>
+    	</div>
+    	<div>
+	    	<table id="npcs">
+	    		<thead>
+	    			<th>Name</th>
+	    			<th>Armor Class</th>
+	    			<th>Hit Points</th>
+	    			<th>Passive Perception</th>
+	    			<th>Initiative</th>
+	    			<th></th>
+	    		</thead>
+	    		<tbody id="npcsBody">
+	    			<tr>
+	    				<td>
+	    					<input type="text" name="unitName" class="npc_placeholder">
+	    				</td>
+	    				<td>
+	    					<input type="text" name="armorClass" class="npc_placeholder">
+	    				</td>
+	    				<td>
+	    					<input type="text" name="hitPoints" class="npc_placeholder">
+	    				</td>
+	    				<td>
+	    					<input type="text" name="passivePerception" class="npc_placeholder">
+	    				</td>
+	    				<td>
+	    					<input type="text" name="initiative" class="initiative">
+	    				</td>
+	    				<td></td>
+	    			</tr>
+	    		</tbody>
+	    	</table>
+    	</div>
+    </div>
+    <div>
+    	<button id="sortCombatants">Combat Time</button>
+    	<button id="resetCombat">Reset</button>
+    </div>
+
+    <hr>
+
+    <div class="container" id="resultsContainer" style="display:none">
+    	<table id="resultsTable">
+    		<thead>
+    			<th>Name</th>
+    			<th>Hit Points</th>
+    			<th>Initiative</th>
+    		</thead>
+    		<tbody class="results"></tbody>
+    	</table>
+    </div>
+</body>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+  	$("#addPlayer").click(function () {
+		var target = "players";
+
+		addRow(target);
+  	});
+
+  	$("#addNPC").click( function () {
+  		var target = "npcs";
+
+  		addRow(target);
+  	})
+
+  });
+
+  function addRow(target) {
+  		var html = "<tr><td><input type='text' name='unitName'></td><td><input type='text' name='armorClass'></td><td><input type='text' name='hitPoints'></td><td><input type='text' name='passivePerception'></td><td><input type='text' name='initiative' class='initiative'></td><td><button onclick='deleteTableRow(this);'>Remove</button></td></tr>";
+
+  		$("#" + target + " tbody").append(html);
+  }
+
+  function deleteTableRow(obj) {
+      	$(obj).closest('tr').remove();
+  }
+
+
+
+  $("#sortCombatants").click(function() {
+  		var playerData = getTableData("players"),
+  			NPCData = getTableData("npcs"),
+  			combinedData = [];
+
+  			clearResultsTable();
+
+  			combinedData = combineTableData(playerData, NPCData);
+
+  			sortTableDataByInitiative(combinedData);
+
+  			console.log(combinedData);
+
+  			addToResultsTable(combinedData);
+
+  			$("#resultsContainer").show();
+  })
+
+  function getTableData(elementId) {
+	  	var data = $('table#'+ elementId +' tbody tr').map(function(index) {
+			var cols = $(this).find('td').children();
+			    return {
+			        name: cols[0].value,            
+			        armorClass: cols[1].value,
+			        hitPoints: cols[2].value,
+			        passivePerception: cols[3].value,
+			        initiative: cols[4].value
+			    };
+			}).get();
+	  	return data;
+
+  }
+
+  function combineTableData(playerData, NPCData) {
+  		var combinedData = [];
+
+  			Array.prototype.push.apply(combinedData, playerData);
+  			Array.prototype.push.apply(combinedData, NPCData);
+
+  			return combinedData;
+  }
+
+  function sortTableDataByInitiative(combinedData) {
+  		combinedData.sort((a, b) => Number(b.initiative) - Number(a.initiative));
+  }
+
+  function addToResultsTable(combinedData) {
+  		combinedData.forEach(function(data) {
+  			$("#resultsTable").append("<tr><td>" + data.name + "</td><td class='result_content'>" + data.hitPoints + "</td><td class='result_content'>" + data.initiative + "</td></tr>")
+  		});
+  }
+
+  function clearResultsTable() {
+  		 $("#resultsTable tbody").empty();
+  }
+
+  $("#resetCombat").click(function() {
+  		clearResultsTable();
+  		hideResultsContainer();
+  		clearInitiativeValues();
+  		resetNPCTable();
+  })
+
+  function clearInitiativeValues() {
+  	$(".initiative").val('');
+  }
+
+  function resetNPCTable() {
+  	$("#npcsBody").children("tr:not(:first)").remove();
+  	$(".npc_placeholder").val('');
+  }
+
+  function hideResultsContainer() {
+  	$("#resultsContainer").hide();
+  }
+
+ </script>
